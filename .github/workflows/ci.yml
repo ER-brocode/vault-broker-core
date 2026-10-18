@@ -1,0 +1,35 @@
+name: CI & Automated Verification
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    name: Build & Test Core Engine
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          check-latest: true
+
+      - name: Verify Dependencies
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod
+
+      - name: Run Unit & Integration Tests
+        run: |
+          go test -v -race -coverprofile=coverage.out ./...
+
+      - name: Verify Code Coverage
+        run: |
+          go tool cover -func=coverage.out
